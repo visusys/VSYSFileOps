@@ -1,7 +1,13 @@
+
+# Original Script Created by mklement0 on StackOverflow
+#
+
 function Request-AdminRights {
 
     [CmdletBinding()]
-    param()
+    param(
+        [switch]$NoExit
+    )
 
     $isWin = $env:OS -eq 'Windows_NT'
 
@@ -12,9 +18,9 @@ function Request-AdminRights {
     }
 
     # Get the relevant variable values from the calling script's scope.
-    $scriptPath = $PSCmdlet.GetVariableValue('PSCommandPath')
-    $scriptBoundParameters = $PSCmdlet.GetVariableValue('PSBoundParameters')
-    $scriptArgs = $PSCmdlet.GetVariableValue('args')
+    $scriptPath             = $PSCmdlet.GetVariableValue('PSCommandPath')
+    $scriptBoundParameters  = $PSCmdlet.GetVariableValue('PSBoundParameters')
+    $scriptArgs             = $PSCmdlet.GetVariableValue('args')
 
     Write-Verbose ("This script, `"$scriptPath`", requires " + ("superuser privileges, ", "admin privileges, ")[$isWin] + ("re-invoking with sudo...", "re-invoking in a new window with elevation...")[$isWin])
 
@@ -43,7 +49,11 @@ function Request-AdminRights {
         # Note: Since the new window running the elevated session must remain open, we do *not* append `exit $LASTEXITCODE`, unlike on Unix.
         $cmd = 'param($bound, $positional) Set-Location "{0}"; & "{1}" @bound @positional' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath
         if ($isWin) {
-            Start-Process -Verb RunAs $psExe ('-noexit -encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
+            if($NoExit){
+                Start-Process -Verb RunAs $psExe ('-noexit -encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
+            }else {
+                Start-Process -Verb RunAs $psExe ('-encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
+            }
         }
         else {
             sudo $psExe -encodedCommand ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))) -encodedArguments ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
@@ -56,7 +66,11 @@ function Request-AdminRights {
         # Also, on WinPS we must set the working dir.
 
         if ($isWin) {
-            Start-Process -Verb RunAs $psExe ('-noexit -c Set-Location "{0}"; & "{1}"' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath)
+            if($NoExit){
+                Start-Process -Verb RunAs $psExe ('-noexit -c Set-Location "{0}"; & "{1}"' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath)
+            }else{
+                Start-Process -Verb RunAs $psExe ('-c Set-Location "{0}"; & "{1}"' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath)
+            }
         }
         else {
             # Note: On Unix, the working directory is always automatically inherited.

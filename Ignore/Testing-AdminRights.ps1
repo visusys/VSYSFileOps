@@ -7,8 +7,8 @@ Param(
 )
 
 if (!(Test-IsAdmin)) {
-    "Current location: $($PWD.ProviderPath)"
-    Get-AdminRights -Verbose
+    Request-AdminRights -Verbose -NoExit
+    Exit
 }
 
 # Print the arguments received in diagnostic form.
@@ -19,11 +19,3 @@ Write-Verbose -Verbose '== Arguments received:'
     Args              = $args | ForEach-Object { [pscustomobject] @{ Value = $_; Type = $_.GetType().Name } } | Out-String
     CurrentLocation   = $PWD.ProviderPath
 } | Format-List
-
-
-# .\Testing-AdminRights.ps1 -MyString1 'This is a string' -MyString3 "Lorem Ipsum" -MySwitch -MyString2 "Another string" -MyInteger 30000 "unbound1"
-# .\Testing-AdminRights.ps1 -MyString1 'This "is a string' -MyString3 'Lorem "Ipsum"' -MySwitch -MyString2 "Anot'her`r`n string" -MyInteger 30000 "unbound1"
-# .\Testing-AdminRights.ps1 -MyString1 "Anot'her`r`n string"
-# .\Testing-AdminRights.ps1 -MyString1 'Anot''her`r`n string' 
-# .\Testing-AdminRights.ps1 -MyString1 'Anot''""her`r`n string' 
-# .\Testing-AdminRights.ps1 -MyString1 "Anot''""her string" 

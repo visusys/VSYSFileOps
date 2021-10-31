@@ -1,35 +1,38 @@
-function Test-IsSensitivePath {
+function Test-IsSensitiveWindowsPath {
 	[CmdletBinding()]
     Param(
-        [Parameter(Mandatory=$true)]  [string]$Path
+        [Parameter(Mandatory=$true)] 
+        [String]$Path,
+
+        [Parameter(Mandatory=$false)]
+        [Switch]$CheckValid
     )
 
-    if(!(Test-Path $Path -IsValid)){
-        throw [System.ArgumentException]"Invalid path passed. Likely specified incorrect drive letter."
+    # Begin path validation
+    #
+    if($CheckValid){
+        if(!(Test-Path $Path)){
+            throw [System.ArgumentException] "The path specified doesn't exist."
+        }
+        if(!(Test-Path $Path -IsValid)){
+            throw [System.ArgumentException] "The path specified is invalid."
+        }
+        if(Test-Path $Path -PathType leaf){
+            throw [System.ArgumentException] "File passed when expected path."
+        }
+        if(($null -eq $Path) -or ([string]::IsNullOrEmpty($Path.Trim()))){
+            throw [System.ArgumentException] "The path specified is either empty or null."
+        }
     }
 
-    if(($Path -eq "") -or ($Path -eq " ") -or ($Path -eq $null)){
-        throw [System.ArgumentException]"Invalid path passed. (Empty string or null)"
-    }
-
-    if ([System.IO.Path]::IsPathRooted($Path)) {
-        # this will throw an exception if the path can't be used
-        # for example Z:\whatever is accepted, ZZ:\whatever is not
-        # $validatedPath = ([System.IO.DirectoryInfo]$path).FullName
-    } else {
-        throw [System.ArgumentException]"Only fully-qualified paths are accepted."
-    }
+    # Convert to backslash and limit consecutives
+    $Path = $Path.Replace('/','\')
+    $Path = $Path -replace('\\+','\')
 
     $OSDrive = $((Get-WmiObject Win32_OperatingSystem).SystemDrive)
-    if(($OSDrive -eq "") -or ($OSDrive -eq " ") -or ($OSDrive -eq $null)){
+    if(($OSDrive -eq "") -or ($OSDrive -eq " ") -or ($null -eq $OSDrive)){
         throw "Could not determine the system drive."
     }
-
-    ################### TODO #####################
-    # Include \\ or / or // as path separators
-    # Convert intelligently to single backslashes
-    # and then continue to below.
-
 
     $UnsafeDirectories = @(
         $($OSDrive + '\Windows'),
