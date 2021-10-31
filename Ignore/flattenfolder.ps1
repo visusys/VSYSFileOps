@@ -1,4 +1,6 @@
 
+# TODO: Convert and clean
+
 function Test-IsSensitivePath {
 	[CmdletBinding()]
     Param(
