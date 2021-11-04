@@ -22,7 +22,7 @@ function Request-AdminRights {
     $scriptBoundParameters  = $PSCmdlet.GetVariableValue('PSBoundParameters')
     $scriptArgs             = $PSCmdlet.GetVariableValue('args')
 
-    Write-Verbose ("This script, `"$scriptPath`", requires " + ("superuser privileges, ", "admin privileges, ")[$isWin] + ("re-invoking with sudo...", "re-invoking in a new window with elevation...")[$isWin])
+    Write-Verbose ("This script, `"$scriptPath`", requires " + ("superuser privileges, ", "admin privileges. ")[$isWin] + ("re-invoking with sudo...", "Elevating automatically now.")[$isWin])
 
     # Note: 
     #   * On Windows, the script invariably runs in a *new window*, and by design we let it run asynchronously, in a stay-open session.
