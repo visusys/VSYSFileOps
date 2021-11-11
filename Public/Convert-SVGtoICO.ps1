@@ -21,7 +21,10 @@
     DateCreated: 2021-11-10
 
 .EXAMPLE
-    Convert-SVGtoICO -SVG "C:\Test\Myicon.svg" -Output "C:\Test\"
+    Convert-SVGtoICO -InputFile "C:\Icons\MyIcon.svg"
+
+.EXAMPLE
+    Convert-SVGtoICO -InputFile "C:\Icons\MyIcon.svg" -OutputFile "C:\Test\MyIconNew.ico"
 
 .LINK
     https://github.com/visusys
