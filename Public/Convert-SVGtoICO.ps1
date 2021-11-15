@@ -40,9 +40,12 @@ function Convert-SVGtoICO {
 
         [Parameter(Mandatory = $false)]
         [ValidateScript({
-            Confirm-WindowsPathIsValid -Path $_
-        },ErrorMessage = "The passed path, {0}, is invalid.")]
-        [string]$OutputFile
+            if($_ -notmatch "(\.ico)"){
+                throw "The output file must be .ico"
+            }
+            return $true
+        })]
+        [System.IO.FileInfo]$OutputFile
     )
 
     $TempDir = New-TempDirectory 
@@ -88,5 +91,5 @@ function Convert-SVGtoICO {
 
 }
 
-#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\Icons\file-setting.svg"
+#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\8bitmmo.svg" -OutputFile "C:\Users\futur\Desktop\8bitmmo.ico"
 #Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\coding.svg" -OutputFile "C:\Users\futur\Desktop\TestIco\coding.ico"
