@@ -67,4 +67,4 @@ function Get-SVGsFromFile {
     }
 }
 
-#Get-SVGsFromFile -Source "D:\Dev\Powershell\Modules\VSYSFileOps\Ignore\SVGPackage.txt" 
+# Get-SVGsFromFile -Source "D:\Dev\Powershell\Modules\VSYSFileOps\Ignore\SVGPackage.txt" -Destination "C:\Users\futur\Desktop\ico"
