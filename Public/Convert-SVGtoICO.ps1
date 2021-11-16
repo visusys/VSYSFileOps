@@ -91,5 +91,5 @@ function Convert-SVGtoICO {
 
 }
 
-#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\8bitmmo.svg" -OutputFile "C:\Users\futur\Desktop\8bitmmo.ico"
+#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\music-file.svg" -OutputFile "C:\Users\futur\Desktop\music-file.ico"
 #Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\coding.svg" -OutputFile "C:\Users\futur\Desktop\TestIco\coding.ico"
