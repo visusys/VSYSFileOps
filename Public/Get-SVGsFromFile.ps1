@@ -40,7 +40,7 @@ function Get-SVGsFromFile {
 
         [Parameter(Mandatory = $false)]
         [ValidateScript({
-                Confirm-WindowsPathIsValid -Path $_ -Container
+                Confirm-ValidWindowsPath -Path $_ -Container
         })]
         [string]
         $Destination
