@@ -44,7 +44,7 @@ function FunctionName {
     param (
         [Parameter(Mandatory,ValueFromPipeline,Position = 0)]
         [ValidateScript({
-            if(-Not ($_ | Test-Path -PathType leaf) ){
+            if(!($_ | Test-Path -PathType leaf)){
                 throw "File/Files don't exist." 
             }
             return $true
