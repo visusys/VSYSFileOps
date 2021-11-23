@@ -1,6 +1,5 @@
 function Copy-DirectoryAndFlatten ($SourceDir, $DestinationDir) {
 	
-
 	Get-ChildItem $SourceDir -Recurse | Where-Object { $_.PSIsContainer -eq $false } | ForEach-Object ($_) {
 		$SourceFile = $_.FullName
 		$DestinationFile = $DestinationDir + $_
@@ -22,30 +21,6 @@ function Copy-DirectoryAndFlatten ($SourceDir, $DestinationDir) {
 	}
 }
 
-if($args.Length -eq 0){
-	throw "No directory passed."
-}
-
-if($args[0] -eq "" -or $args[0] -eq " "){
-	throw "Passed an empty directory."
-}
-
-if(Test-Path -Path $args[0]){
-	Write-Verbose "Path is valid. Continuing."
-}else {
-	throw "Passed path is not valid."
-}
-
-$SourceDirectoryPath=$args[0]
-
-$IsSensitivePath = Test-IsSensitiveWindowsPath -Path $SourceDirectoryPath
-if($IsSensitivePath -eq $true){
-	throw "Passed path is within a sensitive OS folder."
-}else{
-	Write-Verbose "Passed path is not sensitive."
-}
-
-#Read-Host -Prompt "You are about to flatten '$SourceDirectoryPath' Press any key to proceed."
 
 $SourceDirectoryParentPath = (get-item $SourceDirectoryPath).parent.FullName
 

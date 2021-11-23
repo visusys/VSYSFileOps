@@ -53,18 +53,20 @@ function FunctionName {
         [String[]]
         $Filepath,
 
-        [Parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)]
         [ValidateScript({
             if(!(Confirm-ValidWindowsPath -Path $_ -Absolute -Container)){
                 throw [System.ArgumentException] "The supplied path is not valid. Please enter a fully qualified absolute path."
             }
-            
             return $true
         })]
         [String]
         $Destination
-        
     )
+
+    process {
+        
+    }
      
     
 }
