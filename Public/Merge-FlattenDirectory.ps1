@@ -90,7 +90,7 @@ function Merge-FlattenDirectory {
             $DestinationPath = $DestinationPath.TrimEnd('\')
         }
 
-        if(($SourcePath -eq $DestinationPath) -or ($SourcePath -and (!($DestinationPath)))){
+        if($SourcePath -and (!($DestinationPath))){
             $DestinationPath = $SourcePath
         }
 
@@ -100,7 +100,7 @@ function Merge-FlattenDirectory {
         if(!(Test-Path -LiteralPath $TempDirPath -PathType Container)){
             New-Item -LiteralPath $TempDirPath -ItemType Container
         }
-
+        
         Copy-Item -LiteralPath $SourcePath -Destination $TempDirPath -Force -Recurse
 
         $Hash = @{}
