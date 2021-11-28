@@ -76,7 +76,12 @@ function Merge-FlattenDirectory {
         })]
         [Alias("destination","dest","output","o")]
         [string]
-        $DestinationPath
+        $DestinationPath,
+
+        [Parameter(Mandatory=$false)]
+        [ValidateSet(1, 2, 3, 4, 5, IgnoreCase = $true)]
+        [Int32]
+        $Padding = 3
     )
 
     begin {
@@ -84,85 +89,77 @@ function Merge-FlattenDirectory {
         if ($DestinationPath) {
             $DestinationPath = $DestinationPath.TrimEnd('\')
         }
+
         if(($SourcePath -eq $DestinationPath) -or ($SourcePath -and (!($DestinationPath)))){
-            
-            $FlattenItself = $true
-
-
-            $ParentDir          = (Get-Item $SourcePath).Parent.FullName
-            $TempDirObject      = New-TempDirectory
-            $TempDirPath        = $TempDirObject.FullName
-            $TempDirName        = $TempDirObject.Name
-            $RelocatedTempDir   = Join-Path $ParentDir $TempDirName
-            $DestinationPath    = $TempDirPath
-
-            if((Test-IsSensitiveWindowsPath -Path $ParentDir -Strict).IsSensitive){
-                throw [System.IO.IOException] "Path supplied is a protected OS directory."
-            }
-            if((Test-IsSensitiveWindowsPath -Path $TempDirPath -Strict).IsSensitive){
-                throw [System.IO.IOException] "Path supplied is a protected OS directory."
-            }
-            
-        }
-        if(!(Test-Path -LiteralPath $DestinationPath -PathType Container)){
-            New-Item -Path $DestinationPath -ItemType Container
+            $DestinationPath = $SourcePath
         }
 
-        $OperationResults = [System.Collections.Generic.List[object]]@()
+        $TempDirObject      = New-TempDirectory
+        $TempDirPath        = $TempDirObject.FullName
+        
+        if(!(Test-Path -LiteralPath $TempDirPath -PathType Container)){
+            New-Item -Path $TempDirPath -ItemType Container
+        }
+
+        Move-Item -LiteralPath $SourcePath -Destination $TempDirPath -Force
+
+        $Hash = @{}
+        $AllFiles = [IO.DirectoryInfo]::new($TempDirPath).GetFiles('*', 'AllDirectories')
+        $FileList = [System.Collections.Generic.List[object]]@()
+
     }
 
     process {
-
-        $AllFiles = Get-ChildItem $SourcePath -Recurse | Where-Object { $_.PsIsContainer -eq $false }
-
+        
         foreach ($File in $AllFiles) {
-            $Source = $File.FullName
-            $Filename = $File.Name
-            $Dest = [IO.Path]::Combine($DestinationPath, $Filename)
-            
-            # Handle duplicates
-            if(Test-Path -LiteralPath $Dest -PathType Leaf){
-                $i = 0
-                while (Test-Path -LiteralPath $Dest -PathType Leaf) {
+            $Key = $File.Name
+            # Create Generic List to hold groups, store FileInfo objects in this list
+            # Specialized generic lists are faster than ArrayList
+            if ($Hash.ContainsKey($Key) -eq $false) {
+                $Hash[$Key] = [Collections.Generic.List[System.IO.FileInfo]]::new()
+            }
+            $Hash[$Key].Add($File)
+        }
+
+        foreach ($pile in $Hash.Values) {
+            if ($pile.Count -gt 1) {
+                $i = 1
+                foreach ($pileitem in $pile) {
+                    # $pileitem # System.IO.FileSystemInfo
+                    $fileobj = [PSCustomObject]@{
+                        FilenameOld	   = $pileitem.Name
+                        FilenameNew	   = $pileitem.Name
+                        FileSystemInfo = $pileitem
+                    }
+                    if ($i -gt 1) {
+                        $x = ([string]$i).PadLeft($Padding,'0')
+                        $fileobj.FilenameNew = $pileitem.BaseName + '_' + $x + $pileitem.Extension
+                        $FileList.Add($fileobj)
+                    }else{
+                        $FileList.Add($fileobj)
+                    }
                     $i += 1
-                    $x = $i + 1
-                    $x = ([string]$x).PadLeft(2,'0')
-                    $Filename = $File.basename + '_' + $x + $File.extension
-                    $Dest = [IO.Path]::Combine($DestinationPath, $Filename)
                 }
+            }else{
+                $fileobj = [PSCustomObject]@{
+                    FilenameOld	    = $pile[0].Name
+                    FilenameNew	    = $pile[0].Name
+                    FileSystemInfo  = $pile[0]
+                }
+                $FileList.Add($fileobj)
             }
+        }
+        
+        foreach ($Object in $FileList) {
+            $ToRename =  [IO.Path]::Combine($Object.FileSystemInfo.DirectoryName, $Object.FilenameOld)
+            $ToMove   =  [IO.Path]::Combine($Object.FileSystemInfo.DirectoryName, $Object.FilenameNew)
 
-            Copy-Item -LiteralPath $Source -Destination $Dest -Force
+            Rename-Item -LiteralPath $ToRename -NewName $Object.FilenameNew
+            if(!(Test-Path -LiteralPath $SourcePath -PathType Container)){
+                New-Item -Path $SourcePath -ItemType Container
+            }
             
-            $OperationResultsObj = [PSCustomObject]@{
-                Filename         = $Filename
-                Source           = $Source
-                Destination		 = $Dest
-                ItemProperties	 = Get-ItemProperty -Path $Dest
-            }
-
-            $OperationResults.Add($OperationResultsObj)
-        }
-
-        if($FlattenItself){
-            try {
-                Move-Item -LiteralPath $TempDirPath -Destination $ParentDir
-                Remove-Item $SourcePath -Recurse
-                Rename-Item $RelocatedTempDir $SourcePath
-            } catch {
-                Write-Host "An error occurred:"
-                Write-Host $_.ScriptStackTrace
-                Exit
-            }
-            foreach ($ResultsObj in $OperationResults) {
-                $ResultsObj.Destination = $SourcePath + '\' + $ResultsObj.Filename
-                $ResultsObj.ItemProperties = Get-ItemProperty -Path $ResultsObj.Destination
-            }
-        }
-    }
-    end {
-        foreach ($ResultsObj in $OperationResults) {
-            $ResultsObj
+            Move-Item -LiteralPath $ToMove -Destination $SourcePath
         }
     }
 }
