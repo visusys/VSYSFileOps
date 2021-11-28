@@ -98,10 +98,10 @@ function Merge-FlattenDirectory {
         $TempDirPath        = $TempDirObject.FullName
         
         if(!(Test-Path -LiteralPath $TempDirPath -PathType Container)){
-            New-Item -Path $TempDirPath -ItemType Container
+            New-Item -LiteralPath $TempDirPath -ItemType Container
         }
 
-        Move-Item -LiteralPath $SourcePath -Destination $TempDirPath -Force
+        Copy-Item -LiteralPath $SourcePath -Destination $TempDirPath -Force -Recurse
 
         $Hash = @{}
         $AllFiles = [IO.DirectoryInfo]::new($TempDirPath).GetFiles('*', 'AllDirectories')
@@ -149,17 +149,24 @@ function Merge-FlattenDirectory {
                 $FileList.Add($fileobj)
             }
         }
-        
+
+        if($SourcePath -eq $DestinationPath){
+            Remove-Item $SourcePath -Recurse
+        }
+
+        if(!(Test-Path -LiteralPath $DestinationPath -PathType Container)){
+            New-Item -Path $DestinationPath -ItemType Container
+        }
+
         foreach ($Object in $FileList) {
+
             $ToRename =  [IO.Path]::Combine($Object.FileSystemInfo.DirectoryName, $Object.FilenameOld)
             $ToMove   =  [IO.Path]::Combine($Object.FileSystemInfo.DirectoryName, $Object.FilenameNew)
 
             Rename-Item -LiteralPath $ToRename -NewName $Object.FilenameNew
-            if(!(Test-Path -LiteralPath $SourcePath -PathType Container)){
-                New-Item -Path $SourcePath -ItemType Container
-            }
-            
-            Move-Item -LiteralPath $ToMove -Destination $SourcePath
+            Move-Item -LiteralPath $ToMove -Destination $DestinationPath
         }
     }
 }
+
+# Merge-FlattenDirectory "C:\Users\futur\Desktop\Testing\Test"
