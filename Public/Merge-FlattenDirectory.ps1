@@ -91,8 +91,8 @@ function Merge-FlattenDirectory {
         # Escape $SourcePath so we can use wildcards.
         $Source = [WildcardPattern]::Escape($SourcePath)
 
-        # If there is no $DestinationPath supplied, we can assume the operation is to flatten 
-        # only the SourcePath. Thus, we set the DestinationPath to be the same as the SourcePath.
+        # If there is no $DestinationPath supplied, we flatten only the SourcePath. 
+        # Thus, set DestinationPath to be the same as the SourcePath.
         if (!$DestinationPath) {
             $DestinationPath = $SourcePath
 
@@ -132,10 +132,9 @@ function Merge-FlattenDirectory {
             # Create the destination directory now, ready for population in the process block.
             New-Item -ItemType Directory -Force -Path $DestinationPath
 
-            # Write-Host "`$TempPath:" $TempPath -ForegroundColor Green
         }
 
-        # Immediately grab all files as an Array of FileInfo Objects
+        # Grab all files as an Array of FileInfo Objects
         $AllFiles = [IO.DirectoryInfo]::new($TempPath).GetFiles('*', 'AllDirectories')
         
     }
@@ -195,7 +194,7 @@ function Merge-FlattenDirectory {
             }
 
             # Return each file to the pipeline.
-            # $File
+            $File
         }
 
         # $Stopwatch.Stop()
