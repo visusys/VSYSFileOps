@@ -142,7 +142,7 @@ function Merge-FlattenDirectory {
     process {
 
         ##
-        # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         # 
 
         # Initialize array to store duplicate files
@@ -181,7 +181,7 @@ function Merge-FlattenDirectory {
 
                 # Move the file to its appropriate destination. (Force)
                 Move-Item -LiteralPath $File -Destination $DestinationPath -Force
-            }else{
+            } else {
                 try {
 
                     # Move the file to its appropriate destination. (Non-Force)
@@ -194,13 +194,13 @@ function Merge-FlattenDirectory {
             }
 
             # Return each file to the pipeline.
-            $File
+            # $File
         }
 
-        # $Stopwatch.Stop()
-        # Write-Host "`$Stopwatch.Elapsed:            " $Stopwatch.Elapsed -ForegroundColor Green  
-        # Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green
-        # Write-Host "`$Stopwatch.ElapsedTicks:       " $Stopwatch.ElapsedTicks -ForegroundColor Green 
+        $Stopwatch.Stop()
+        Write-Host "`$Stopwatch.Elapsed:            " $Stopwatch.Elapsed -ForegroundColor Green  
+        Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green
+        Write-Host "`$Stopwatch.ElapsedTicks:       " $Stopwatch.ElapsedTicks -ForegroundColor Green 
     }
 
     end {
