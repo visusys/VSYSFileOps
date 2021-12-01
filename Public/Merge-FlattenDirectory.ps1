@@ -122,12 +122,12 @@ function Merge-FlattenDirectory {
             # Since a destination was supplied, we copy everything to a new temp directory 
             # instead of moving everything. We want the source directory to remain untouched.
 
-            # For some reason, Copy-Item is working faster than Robocopy.
-            # Robocopy on Large Dataset:  ~1386ms - ~1400ms
+            # Robocopy seems to be the most performant here.
+            # Robocopy on Large Dataset:  ~789ms - ~810ms
             # Copy-Item on Large Dataset: ~1203ms - ~1280ms
             #
-            Copy-Item -Path $Source'\*' -Destination $TempPath -Force -Recurse
-            # Robocopy $Source $TempPath /COPYALL /B /MIR /E /R:0 /W:0 /NFL /NDL /MT:32
+            # Copy-Item -Path $Source'\*' -Destination $TempPath -Force -Recurse
+            Robocopy $Source $TempPath /COPYALL /B /E /R:0 /W:0 /NFL /NDL /NC /NS /NP /MT:48
 
             # Create the destination directory now, ready for population in the process block.
             New-Item -ItemType Directory -Force -Path $DestinationPath
@@ -195,12 +195,13 @@ function Merge-FlattenDirectory {
             }
 
             # Return each file to the pipeline.
-            $File
+            # $File
         }
 
-        # Write-Host "`$Stopwatch.Stop():" $Stopwatch.Stop() -ForegroundColor Green
-        # Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green 
-        # Write-Host "`$Stopwatch.ElapsedTicks:" $Stopwatch.ElapsedTicks -ForegroundColor Green 
+        # $Stopwatch.Stop()
+        # Write-Host "`$Stopwatch.Elapsed:            " $Stopwatch.Elapsed -ForegroundColor Green  
+        # Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green
+        # Write-Host "`$Stopwatch.ElapsedTicks:       " $Stopwatch.ElapsedTicks -ForegroundColor Green 
     }
 
     end {
@@ -208,4 +209,4 @@ function Merge-FlattenDirectory {
     }
 }
 
-# Merge-FlattenDirectory "C:\Users\futur\Desktop\Testing\Test" "C:\Users\futur\Desktop\Testing\TestYey" -Force
+# Merge-FlattenDirectory "C:\Users\futur\Desktop\Testing\Test" "C:\Users\futur\Desktop\Testing\TestFlat" -Force
