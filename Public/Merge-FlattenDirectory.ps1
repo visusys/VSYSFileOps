@@ -145,13 +145,13 @@ function Merge-FlattenDirectory {
         # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         # 
 
-        # Initialize array to store duplicate files
+        # Initialize hashtable to store duplicate files
         $Duplicates = @{}
         
         # Iterate over all files
         foreach ($File in $AllFiles) {
 
-            # If our $Duplicates array already contains the current filename, we have a duplicate.
+            # If our $Duplicates hashtable already contains the current filename, we have a duplicate.
             if ($Duplicates.Contains($File.Name)) {
 
                 # Rename the duplicate file by appending a numerical index to the end of the file.
@@ -168,8 +168,8 @@ function Merge-FlattenDirectory {
 
             } else {
 
-                # No duplicates were detected. Add a value of 1 to the duplicates array to represent 
-                # the current file. Pass $File down to be moved.
+                # No duplicates were detected. Add a value of 1 to the duplicates 
+                # hashtable to represent the current file. Pass $File down to be moved.
                 $PathTemp = Get-ItemProperty -LiteralPath $File
                 $Duplicates[$File.Name] = 1
                 $File = $PathTemp
