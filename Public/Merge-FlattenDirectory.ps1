@@ -48,7 +48,7 @@
 
 #>
 function Merge-FlattenDirectory {
-    [CmdletBinding(SupportsShouldProcess)]
+    [CmdletBinding()]
     param (
         [Parameter(Mandatory, Position = 0, ValueFromPipeline)]
         [ValidateScript({
@@ -61,7 +61,7 @@ function Merge-FlattenDirectory {
                 return $true
             })]
         [Alias("source", "input", "i")]
-        [string]
+        [string[]]
         $SourcePath,
 
         [Parameter(Mandatory = $false, Position = 1, ValueFromPipelineByPropertyName)]
@@ -73,7 +73,7 @@ function Merge-FlattenDirectory {
         [Switch]
         $Force,
 
-        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet(1, 2, 3, 4, 5)]
         [int32]
         $DuplicatePadding = 2
@@ -137,6 +137,8 @@ function Merge-FlattenDirectory {
         # Grab all files as an Array of FileInfo Objects
         $AllFiles = [IO.DirectoryInfo]::new($TempPath).GetFiles('*', 'AllDirectories')
         
+        # Initialize hashtable to store duplicate files
+        $Duplicates = @{}
     }
 
     process {
@@ -144,9 +146,6 @@ function Merge-FlattenDirectory {
         ##
         # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         # 
-
-        # Initialize hashtable to store duplicate files
-        $Duplicates = @{}
         
         # Iterate over all files
         foreach ($File in $AllFiles) {
@@ -154,18 +153,41 @@ function Merge-FlattenDirectory {
             # If our $Duplicates hashtable already contains the current filename, we have a duplicate.
             if ($Duplicates.Contains($File.Name)) {
 
-                # Rename the duplicate file by appending a numerical index to the end of the file.
+                # Create a new name for the file by appending a numerical index to the end of the filename.
                 $PathTemp = Get-ItemProperty -LiteralPath $File
-                $RenamedFile = Rename-Item -LiteralPath $PathTemp.PSPath -PassThru -NewName ('{0}_{1}{2}' -f @(
+                $NewName = ('{0}_{1}{2}' -f @(
                     $File.BaseName
                     $Duplicates[$File.Name].ToString().PadLeft($DuplicatePadding, '0')
                     $File.Extension
                 ))
 
-                # Increment the duplicate counter and pass $File down to be moved.
-                $Duplicates[$File.Name]++
-                $File = $RenamedFile
+                # Check if our new name collides with any other filenames in $Duplicates. If so, create 
+                # another new name by appending an additional numeric index to the end of the filename.
+                $DuplicateCount = 1
+                while ($Duplicates[$NewName]) {
+                    $NewName = ('{0}_{1}{2}' -f @(
+                        [System.IO.Path]::GetFileNameWithoutExtension($NewName)
+                        $DuplicateCount.ToString().PadLeft($DuplicatePadding, '0')
+                        [System.IO.Path]::GetExtension($NewName)
+                    ))
 
+                    $DuplicateCount++
+
+                    # If we're at a depth of 8, throw. Something is obviously wrong.
+                    if ($DuplicateCount -ge 8) {
+                        throw [System.Exception] "Duplicate count reached limit."
+                        break
+                    }
+                }
+
+                # Finally, rename the file with our new name.
+                $RenamedFile = Rename-Item -LiteralPath $PathTemp.PSPath -PassThru -NewName $NewName
+
+                # Increment the duplicate counters and pass $File down to be moved.
+                $Duplicates[$File.Name]++
+                $Duplicates[$NewName]++
+                $File = $RenamedFile
+                
             } else {
 
                 # No duplicates were detected. Add a value of 1 to the duplicates 
@@ -187,14 +209,13 @@ function Merge-FlattenDirectory {
                     # Move the file to its appropriate destination. (Non-Force)
                     Move-Item -LiteralPath $File -Destination $DestinationPath -ErrorAction Stop
                 } catch {
-
                     # Warn the user that files were skipped because of duplicate filenames.
-                    Write-Warning "$($File.Name) already exists in the destination folder. Skipping this file."
+                    Write-Warning "File already exists in the destination folder. Skipping this file."
                 }
             }
 
             # Return each file to the pipeline.
-            # $File
+            $File
         }
 
         # $Stopwatch.Stop()
@@ -208,4 +229,4 @@ function Merge-FlattenDirectory {
     }
 }
 
-# Merge-FlattenDirectory "C:\Users\futur\Desktop\Testing\Test" "C:\Users\futur\Desktop\Testing\TestFlat" -Force
+# Merge-FlattenDirectory -SourcePath "C:\Users\futur\Desktop\Testing\Test"

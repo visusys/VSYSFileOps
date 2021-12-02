@@ -6,7 +6,8 @@ function Request-AdminRights {
 
     [CmdletBinding()]
     param(
-        [switch]$NoExit
+        [switch]$NoExit,
+        [switch]$HiddenWindow
     )
     
     $isWin = $env:OS -eq 'Windows_NT'
@@ -53,11 +54,16 @@ function Request-AdminRights {
         }else {
             $NoExitString = ''
         }
+        if($HiddenWindow) {
+            $HiddenWindowString = '-windowstyle hidden '
+        }else{
+            $HiddenWindowString = ''
+        }
         # The command that receives the (deserialized) arguments.
         # Note: Since the new window running the elevated session must remain open, we do *not* append `exit $LASTEXITCODE`, unlike on Unix.
         $cmd = 'param($bound, $positional) Set-Location "{0}"; & "{1}" @bound @positional' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath
         if ($isWin) {
-            Start-Process -Verb RunAs $psExe ($NoExitString+'-encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
+            Start-Process -Verb RunAs $psExe ($HiddenWindowString+$NoExitString+'-encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
             #Start-Process -Verb RunAs $psExe ('-noexit -encodedCommand {0} -encodedArguments {1}' -f [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd)), [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
         } else {
             sudo $psExe -encodedCommand ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))) -encodedArguments ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($serializedArgs)))
@@ -69,7 +75,7 @@ function Request-AdminRights {
         # Also, on WinPS we must set the working dir.
     
         if ($isWin) {
-            Start-Process -Verb RunAs $psExe ($NoExitString+'-c Set-Location "{0}"; & "{1}"' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath)
+            Start-Process -Verb RunAs $psExe ($HiddenWindowString+$NoExitString+'-c Set-Location "{0}"; & "{1}"' -f (Get-Location -PSProvider FileSystem).ProviderPath, $scriptPath)
         } else {
             # Note: On Unix, the working directory is always automatically inherited.
             sudo $psExe -c "& `"$scriptPath`"; exit $LASTEXITCODE"

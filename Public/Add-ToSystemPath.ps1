@@ -36,55 +36,71 @@ Function Add-ToSystemPath{
     Param(
         [Parameter(Mandatory, Position=0)]
         [ValidateScript({
-            if (-Not (Test-Path $_ -PathType Container) ) {
-                throw "Folder does not exist" 
+            if (!(Test-Path -LiteralPath $_ -PathType Container) ) {
+                throw "Folder does not exist."
             }
             return $true
         })]
         [string]$Path,
 
         [Parameter(Mandatory = $false)]
-        [switch]$Force
+        [switch]$Confirm
     )
 
+    # Add PresentationCore / PresentationFramework to enable MessageBoxes
+    Add-Type -AssemblyName PresentationCore,PresentationFramework
+
+    # This script must be run as admin since modifying system wide environment
+    # variables requires elevated privileges. We auto-elevate at the wrapper level.
     if(!(Test-IsAdmin)){
         Read-Host -Prompt "This function requires admin privileges. Press any key to exit."
         Exit
     }
 
+    # Get the system PATH environment variable and split by semicolon.
+    # This will give us each path entry in the variable.
+    # Where-Object here just removes empty lines.
     $RegKey = (Get-Item "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").GetValue("PATH", $null, "DoNotExpandEnvironmentNames")
     $PathList = $RegKey -split ';'
     $PathList = $PathList | Where-Object {$_}
 
+
+    # Instantiate a new list to collect path entries.
     $NewPathList = [System.Collections.Generic.List[object]]@()
-    #Ensure the path doesn't already exist
+
+    # Ensure the path doesn't already exist in the system path. If it does,
+    # spawn a MessageBox to alert the user of this information.
     foreach($PathEntry in $PathList) {
         if($PathEntry -eq $Path){
-            return "$Path already exists in PATH."
+            $Message = "The path ($Path) was already in the system path."
+            [System.Windows.MessageBox]::Show($Message, "Duplicate Entry", "Ok", "Error")
+            Exit
         }else{
+            # Populate the list with existing paths
             [void]$NewPathList.Add($PathEntry)
         }
     }
-    # Add our new path to the bottom
+    # Finally add our new path to the bottom and join everything.
     [void]$NewPathList.Add($Path)
     $NewPath = $NewPathList -Join ';'
 
-    if(!$Force){
-        Add-Type -AssemblyName PresentationCore,PresentationFramework
-        $answer = [System.Windows.MessageBox]::Show("Add $Path to System PATH?", "Confirmation", "YesNoCancel", "Warning")
-        switch ($answer) {
+    if($Confirm){
+        $Result = [System.Windows.MessageBox]::Show("Add $Path to System PATH?", "Confirmation", "YesNoCancel", "Warning")
+        switch ($Result) {
             { @("Yes") -contains $_ } {
                 Break
             }
-            default {Exit}
+            default {
+                Exit
+            }
         }
     }
 
-    # Set the new variable
+    # Set the new environment variable
     [Environment]::SetEnvironmentVariable('path',$NewPath,'Machine')
-    if(!$Force){
-        $msgBody = "$Path was successfully added to the system PATH."
-        [System.Windows.MessageBox]::Show($msgBody, "Success", 0, "Information")
-    }
+
+    # Invoke a MessageBox to confirm the new addition.
+    $msgBody = "$Path was successfully added to the system PATH."
+    [System.Windows.MessageBox]::Show($msgBody, "Success", 0, "Information")
 }
 
