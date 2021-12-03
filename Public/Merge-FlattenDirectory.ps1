@@ -50,7 +50,7 @@
 function Merge-FlattenDirectory {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, Position = 0, ValueFromPipeline)]
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateScript({
                 if (!(Test-Path -LiteralPath $_)) {
                     throw [System.ArgumentException] "Path does not exist." 
@@ -64,16 +64,16 @@ function Merge-FlattenDirectory {
         [string[]]
         $SourcePath,
 
-        [Parameter(Mandatory = $false, Position = 1, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
         [Alias("destination", "dest", "output", "o")]
         [string]
         $DestinationPath = $null,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
         [Switch]
         $Force,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
         [ValidateSet(1, 2, 3, 4, 5)]
         [int32]
         $DuplicatePadding = 2
@@ -81,6 +81,17 @@ function Merge-FlattenDirectory {
 
     begin {
 
+        # Initialize hashtable to store duplicate files
+        $Duplicates = @{}
+
+    }
+
+    process {
+
+        ##
+        # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        # 
+        
         # Trim trailing backslashes and initialize a new temporary directory.
         $SourcePath         = $SourcePath.TrimEnd('\')
         $DestinationPath    = $DestinationPath.TrimEnd('\')
@@ -100,7 +111,7 @@ function Merge-FlattenDirectory {
             # directory for further processing.
             Move-Item -Path $Source'\*' -Destination $TempPath -Force
 
-        }else{
+        } else {
 
             # We need to perform some parameter validation on DestinationPath:
 
@@ -136,17 +147,7 @@ function Merge-FlattenDirectory {
 
         # Grab all files as an Array of FileInfo Objects
         $AllFiles = [IO.DirectoryInfo]::new($TempPath).GetFiles('*', 'AllDirectories')
-        
-        # Initialize hashtable to store duplicate files
-        $Duplicates = @{}
-    }
 
-    process {
-
-        ##
-        # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-        # 
-        
         # Iterate over all files
         foreach ($File in $AllFiles) {
 
