@@ -71,19 +71,18 @@ Function Move-SelectedFilesToNewFolder {
     process {
 
         ##
-        # $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+        $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
         # Initialize directory variable for comparison
         $Directory = ''
         foreach($File in $SourceFiles) {
 
-            # Get a System.IO.FileInfo object to work with and test
-            # to make sure all passed files share the same parent.
-            $File = Get-ItemProperty -LiteralPath $File
+            $Dir = [System.IO.Path]::GetDirectoryName($File)
+
             if(!$Directory){
-                $Directory = $File.Directory.FullName
+                $Directory = $Dir
             }
-            if($Directory -ne $File.Directory.FullName){
+            if($Directory -ne $Dir){
                 throw "Not all files are in the same directory."
             }
         }
@@ -95,29 +94,33 @@ Function Move-SelectedFilesToNewFolder {
         # Move all files passed in to SourceFile to the new directory.
         # Catch errors to notify end-user on soft fail.
         foreach ($File in $SourceFiles) {
-            $File = Get-ItemProperty -LiteralPath $File
-            $FinalFile = [IO.Path]::Combine($FinalPath, $File.Name)
+            $FileOriginal   = [System.IO.Path]::GetFullPath($File)
+            $FileName       = [System.IO.Path]::GetFileName($File)
+            $FinalFile      = [IO.Path]::Combine($FinalPath, $FileName)
             try {
-                Move-Item -LiteralPath $File.FullName -Destination $FinalFile -ErrorAction Stop
+                Move-Item -LiteralPath $FileOriginal -Destination $FinalFile -ErrorAction Stop
             } catch {
                 Write-Warning "Cannot create a file when that file already exists."
             }
         }
-    }
 
-    end {
         # $Stopwatch.Stop()
-        # Write-Host "`$Stopwatch.Elapsed:            " $Stopwatch.Elapsed -ForegroundColor Green  
+        # Write-Host "`$Stopwatch.Elapsed:			" $Stopwatch.Elapsed -ForegroundColor Green
         # Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green
-        # Write-Host "`$Stopwatch.ElapsedTicks:       " $Stopwatch.ElapsedTicks -ForegroundColor Green
+        # Write-Host "`$Stopwatch.ElapsedTicks:		" $Stopwatch.ElapsedTicks -ForegroundColor Green
+
     }
 }
 
-<# [string[]]$FilesToCopy = @(
-    'C:\Users\futur\Desktop\Testing\Test Copy Selected\1088_p.jpg',
-    'C:\Users\futur\Desktop\Testing\Test Copy Selected\04175_thecitythatneversleeps_2560x1440.jpg',
-    'C:\Users\futur\Desktop\Testing\Test Copy Selected\04177_paradiseatbacarasantabarbara_2560x1440.jpg'
-    'C:\Users\futur\Desktop\Testing\Test Copy Selected\04179_beachatpuntacana_2560x1440.jpg'
-)
+# $Stopwatch.Elapsed:               00:00:00.0148735    
+# $Stopwatch.ElapsedMilliseconds:   14
+# $Stopwatch.ElapsedTicks:          148735
 
-Move-SelectedFilesToNewFolder $FilesToCopy #>
+# [string[]]$FilesToCopy = @(
+#     'C:\Users\futur\Desktop\Testing\New Folder Test\laura-chouette-1zWIO5KCHFc-unsplash.jpg',
+#     'C:\Users\futur\Desktop\Testing\New Folder Test\lucas-gouvea-aoEwuEH7YAs-unsplash.jpg',
+#     'C:\Users\futur\Desktop\Testing\New Folder Test\1088_p_03.jpg',
+#     'C:\Users\futur\Desktop\Testing\New Folder Test\malicki-m-beser-PKMvkg7vnUo-unsplash.jpg'
+# )
+
+# Move-SelectedFilesToNewFolder $FilesToCopy

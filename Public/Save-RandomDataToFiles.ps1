@@ -137,8 +137,15 @@ function Save-RandomDataToFiles {
                 $Extension = Get-RandomAlphanumericString -Length 3
             }
             
-            $FilenameLength = Get-Random -Minimum $FilenameLengthMin -Maximum $FilenameLengthMax
-
+            if($FilenameLengthMin -gt $FilenameLengthMax){
+                throw [System.Exception] "Minimum file length is greater than Maximum. Aborting."
+            }
+            if($FilenameLengthMin -eq $FilenameLengthMax){
+                $FilenameLength = $FilenameLengthMin
+            }else{
+                $FilenameLength = Get-Random -Minimum $FilenameLengthMin -Maximum $FilenameLengthMax
+            }
+            
             $RandomHash = [PSCustomObject]@{
                 OutputPath     = $OutputPath
                 Filesize       = $CalculatedFilesize
