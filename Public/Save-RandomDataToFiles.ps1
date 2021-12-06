@@ -1,12 +1,14 @@
 <#
 .SYNOPSIS
-    A brief description of the function or script.
+    Writes multiple random files to disk based on given specifications.
 
 .DESCRIPTION
-    A detailed description of the function or script.
+    Writes multiple random files to disk based on given specifications.
+    All written data is completely random and utilizes 
+    System.Security.Cryptography.RNGCryptoServiceProvider for content.
 
 .PARAMETER OutputPath
-    The path to save all generated random data.
+    The path to save all generated random data files.
 
 .PARAMETER FilesizeMin
     The minimum filesize for each generated file.
@@ -17,6 +19,8 @@
 .PARAMETER Unit
     The memory unit referenced by FilesizeMin / FilesizeMax
     Must be: 'Bytes','KB','MB','GB','TB'
+    For example, a FilesizeMin of 1 and FilesizeMax of 2 with a unit 
+    of 'MB' will write random files with a filesize between 1 and 2 MB.
 
 .PARAMETER NumberOfFiles
     The number of random files to generate in the target directory.
@@ -29,7 +33,8 @@
 
 .PARAMETER FileExtensions
     An array of possible file extensions to be used when generating files.
-    Leave this as one string to restrict to a single extension.
+    Leave this as one string to restrict to a single extension. A default
+    random set of filenames has been hardcoded. This parameter is optional. 
 
 .PARAMETER RandomFileExtensions
     When enabled, all resulting file extensions will be completely random.
@@ -163,6 +168,3 @@ function Save-RandomDataToFiles {
 
     }
 }
-
-# Save-RandomDataToFiles -OutputPath 'C:\Users\futur\Desktop\Testing\Random' -FilesizeMin 1 -FilesizeMax 2 -Unit 'GB' -NumberOfFiles 5 -FileExtensions 'iso','bin'
-# Save-RandomDataToFiles -OutputPath 'C:\Users\futur\Desktop\Testing\Random' -FilesizeMin 20 -FilesizeMax 60 -Unit 'KB' -NumberOfFiles 20
