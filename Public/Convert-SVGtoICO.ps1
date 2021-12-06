@@ -90,6 +90,3 @@ function Convert-SVGtoICO {
     Reset-IconCache
 
 }
-
-#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\music-file.svg" -OutputFile "C:\Users\futur\Desktop\music-file.ico"
-#Convert-SVGtoICO -InputFile "C:\Users\futur\Desktop\coding.svg" -OutputFile "C:\Users\futur\Desktop\TestIco\coding.ico"

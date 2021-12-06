@@ -14,6 +14,7 @@ if ($AssemblyFolders.BaseName -contains 'Standard') {
         $Assembly = @( Get-ChildItem -Path $PSScriptRoot\Lib\Default\*.dll -ErrorAction SilentlyContinue )
     }
 }
+
 $FoundErrors = @(
     Foreach ($Import in @($Assembly)) {
         try {
@@ -25,7 +26,7 @@ $FoundErrors = @(
                 Write-Warning "Processing $($Import.Name) LoaderExceptions: $($E.Message)"
             }
             $true
-            #Write-Error -Message "StackTrace: $($_.Exception.StackTrace)"
+            Write-Error -Message "StackTrace: $($_.Exception.StackTrace)"
         } catch {
             Write-Warning "Processing $($Import.Name) Exception: $($_.Exception.Message)"
             $LoaderExceptions = $($_.Exception.LoaderExceptions) | Sort-Object -Unique
@@ -33,7 +34,7 @@ $FoundErrors = @(
                 Write-Warning "Processing $($Import.Name) LoaderExceptions: $($E.Message)"
             }
             $true
-            #Write-Error -Message "StackTrace: $($_.Exception.StackTrace)"
+            Write-Error -Message "StackTrace: $($_.Exception.StackTrace)"
         }
     }
     #Dot source the files
@@ -41,14 +42,16 @@ $FoundErrors = @(
         Try {
             . $Import.Fullname
         } Catch {
-            Write-Error -Message "Failed to import functions from $($import.Fullname): $_"
+            Write-Warning -Message "Failed to import functions from $($Import.Fullname):" 
+            Write-Warning -Message $_
+            Write-Error -Message "Failed to import functions from $($Import.Fullname): $_"
             $true
         }
     }
 )
 
 if ($FoundErrors.Count -gt 0) {
-    $ModuleName = (Get-ChildItem $PSScriptRoot\*.psd1).BaseName
+    $ModuleName = (Get-ChildItem $PSScriptRoot\*.psm1).BaseName
     Write-Warning "Importing module $ModuleName failed. Fix errors before continuing."
     break
 }
