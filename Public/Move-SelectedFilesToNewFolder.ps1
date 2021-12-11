@@ -55,48 +55,48 @@ Function Move-SelectedFilesToNewFolder {
     Param (
         [parameter(Mandatory, ValueFromPipeline, Position = 0)]
         [ValidateScript({
-            if(!(Test-Path -LiteralPath $_)){
-                throw "File or folder does not exist."
-            }
-            return $true
-        })]
+                if (!(Test-Path -LiteralPath $_)) {
+                    throw "File or folder does not exist."
+                }
+                return $true
+            })]
         [String[]]
         $SourceFiles,
 
-        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName)]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName)]
         [string]
         $NewFolderName = "New Folder"
     )
 
-    process {
 
-        ##
-        $Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    process {
 
         # Initialize directory variable for comparison
         $Directory = ''
-        foreach($File in $SourceFiles) {
-
+        foreach ($File in $SourceFiles) {
+    
             $Dir = [System.IO.Path]::GetDirectoryName($File)
-
-            if(!$Directory){
+    
+            if (!$Directory) {
                 $Directory = $Dir
+    
             }
-            if($Directory -ne $Dir){
+            if ($Directory -ne $Dir) {
                 throw "Not all files are in the same directory."
             }
         }
-
+    
         # Resolve the final path to recieve files and create it. 
         $FinalPath = [IO.Path]::Combine($Directory, $NewFolderName)
         New-Item -Path $FinalPath -ItemType Directory -Force
 
         # Move all files passed in to SourceFile to the new directory.
         # Catch errors to notify end-user on soft fail.
+        # 097ms for 100 files
         foreach ($File in $SourceFiles) {
-            $FileOriginal   = [System.IO.Path]::GetFullPath($File)
-            $FileName       = [System.IO.Path]::GetFileName($File)
-            $FinalFile      = [IO.Path]::Combine($FinalPath, $FileName)
+            $FileOriginal = [System.IO.Path]::GetFullPath($File)
+            $FileName = [System.IO.Path]::GetFileName($File)
+            $FinalFile = [IO.Path]::Combine($FinalPath, $FileName)
             try {
                 Move-Item -LiteralPath $FileOriginal -Destination $FinalFile -ErrorAction Stop
             } catch {
@@ -104,23 +104,18 @@ Function Move-SelectedFilesToNewFolder {
             }
         }
 
-        # $Stopwatch.Stop()
-        # Write-Host "`$Stopwatch.Elapsed:			" $Stopwatch.Elapsed -ForegroundColor Green
-        # Write-Host "`$Stopwatch.ElapsedMilliseconds:" $Stopwatch.ElapsedMilliseconds -ForegroundColor Green
-        # Write-Host "`$Stopwatch.ElapsedTicks:		" $Stopwatch.ElapsedTicks -ForegroundColor Green
-
+        # This is ugly. Very ugly. But it does the job!
+        # I'm sending the refresh command every 20ms
+        # just to make sure it's captured.
+        $wshell = New-Object -ComObject wscript.shell
+        $wshell.SendKeys("{F5}")
+        Start-Sleep -Milliseconds 20
+        $wshell.SendKeys("{F5}")
+        Start-Sleep -Milliseconds 20
+        $wshell.SendKeys("{F5}")
+        Start-Sleep -Milliseconds 20
+        $wshell.SendKeys("{F5}")
+        Start-Sleep -Milliseconds 20
+        $wshell.SendKeys("{F5}")
     }
 }
-
-# $Stopwatch.Elapsed:               00:00:00.0148735    
-# $Stopwatch.ElapsedMilliseconds:   14
-# $Stopwatch.ElapsedTicks:          148735
-
-# [string[]]$FilesToCopy = @(
-#     'C:\Users\futur\Desktop\Testing\New Folder Test\laura-chouette-1zWIO5KCHFc-unsplash.jpg',
-#     'C:\Users\futur\Desktop\Testing\New Folder Test\lucas-gouvea-aoEwuEH7YAs-unsplash.jpg',
-#     'C:\Users\futur\Desktop\Testing\New Folder Test\1088_p_03.jpg',
-#     'C:\Users\futur\Desktop\Testing\New Folder Test\malicki-m-beser-PKMvkg7vnUo-unsplash.jpg'
-# )
-
-# Move-SelectedFilesToNewFolder $FilesToCopy
