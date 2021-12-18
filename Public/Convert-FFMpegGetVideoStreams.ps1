@@ -49,16 +49,17 @@ function Convert-FFMpegGetVideoStreams {
                     continue
                 }
                 [PSCustomObject][ordered]@{
-                    CodecName     = $StreamValue.codec_name
-                    CodecLongName = $StreamValue.codec_long_name
-                    SampleRate    = $StreamValue.sample_rate
-                    BitDepth      = $StreamValue.sample_fmt
-                    Channels      = $StreamValue.channels
-                    ChannelLayout = $StreamValue.channel_layout
-                    BitRate       = $StreamValue.bit_rate
-                    LanguageTag   = $StreamValue.tags.language
-                    TitleTag      = $StreamValue.tags.title
-                    Duration      = $StreamDetails.format.duration
+                    CodecName       = $StreamValue.codec_name
+                    CodecLongName   = $StreamValue.codec_long_name
+                    SampleRate      = $StreamValue.sample_rate
+                    BitDepth        = $StreamValue.sample_fmt
+                    Channels        = $StreamValue.channels
+                    ChannelLayout   = $StreamValue.channel_layout
+                    BitRate         = $StreamValue.bit_rate
+                    LanguageTag     = $StreamValue.tags.language
+                    TitleTag        = $StreamValue.tags.title
+                    Duration        = $StreamDetails.format.duration
+                    FormatFilename  = $StreamDetails.format.filename
                 }
             }
         }
@@ -87,6 +88,7 @@ function Convert-FFMpegGetVideoStreams {
                     FormatDuration      = $StreamDetails.format.duration
                     FormatSize          = $StreamDetails.format.size
                     FormatBitrate       = $StreamDetails.format.bit_rate
+                    FormatFilename      = $StreamDetails.format.filename
                 }
             }
         }
@@ -104,6 +106,7 @@ function Convert-FFMpegGetVideoStreams {
                     DurationTS          = $StreamValue.duration_ts
                     LanguageTag         = $StreamValue.tags.language
                     TitleTag            = $StreamValue.tags.title
+                    FormatFilename      = $StreamDetails.format.filename
                 }
             }
         }
@@ -120,6 +123,7 @@ function Convert-FFMpegGetVideoStreams {
                     Profile             = $StreamValue.profile
                     Language            = $StreamValue.tags.language
                     Title               = $StreamValue.tags.title
+                    FormatFilename      = $StreamDetails.format.filename
                 }
             }
         }
