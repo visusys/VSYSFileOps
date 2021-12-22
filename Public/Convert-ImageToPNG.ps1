@@ -50,7 +50,8 @@ Function Convert-ImageToPNG {
         $SourceFiles
     )
 
-    # Add PresentationCore / PresentationFramework to enable MessageBoxes
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
     Add-Type -AssemblyName PresentationCore,PresentationFramework
     [System.Windows.Forms.Application]::EnableVisualStyles()
 
@@ -66,12 +67,11 @@ Function Convert-ImageToPNG {
         magick @MagickArgs
     } -ThrottleLimit 20
 
-    if($SourceFiles.Count -gt 1){
-        $MBMessage			= "Conversion to PNG Complete."
-        $MBTitle			= "Conversion Complete"
-        $MBButtons		    = [System.Windows.Forms.MessageBoxButtons]::OK
-        $MBIcon				= [System.Windows.Forms.MessageBoxIcon]::Information
-        $MBDefaultButton	= [System.Windows.Forms.MessageBoxDefaultButton]::Button1
-        [System.Windows.Forms.MessageBox]::Show($MBMessage, $MBTitle, $MBButtons, $MBIcon, $MBDefaultButton)
-    }
+    $MBMessage			= "Conversion to PNG Complete."
+    $MBTitle			= "Conversion Complete"
+    $MBButtons		    = [System.Windows.Forms.MessageBoxButtons]::OK
+    $MBIcon				= [System.Windows.Forms.MessageBoxIcon]::Information
+    $MBDefaultButton	= [System.Windows.Forms.MessageBoxDefaultButton]::Button1
+    [System.Windows.Forms.MessageBox]::Show($MBMessage, $MBTitle, $MBButtons, $MBIcon, $MBDefaultButton)
+
 }

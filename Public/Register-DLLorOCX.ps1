@@ -26,16 +26,16 @@
 function Register-DLLorOCX {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory,Position = 0)]
+        [Parameter(Mandatory, Position=0)]
         [ValidateScript({
-            if(!($_ | Test-Path)){
-                throw "File doesn't exist."
+            if (!(Test-Path -LiteralPath $_)) {
+                throw [System.ArgumentException] "File or Folder does not exist."
             }
-            if(!($_ | Test-Path -PathType Leaf)){
-                throw "You must pass a file."
+            if (Test-Path -LiteralPath $_ -PathType Container) {
+                throw [System.ArgumentException] "Folder passed when a file was expected."
             }
             if($_ -notmatch '(\.dll|\.ocx)'){
-                throw "You must pass a .dll or .ocx"
+                throw "You must pass a .dll or .ocx file."
             }
             $true
         })]
@@ -48,9 +48,21 @@ function Register-DLLorOCX {
         $Unregister
     )
 
-    if($Unregister){
-        regsvr32.exe -u $File
-    }else{
-        regsvr32.exe $File
+    process {
+        if($Unregister){
+            $Result = Invoke-GUIMessageBox "Unregister $File?" -Title "Unregister" -Buttons 'YesNoCancel' -Icon 'Question' -DefaultButton 'Button3'
+            if($Result -ne 'Yes') { 
+                Write-Verbose "User canceled the process."
+                Exit
+            }
+            regsvr32.exe -u $File
+        }else{
+            if($Result -ne 'Yes') { 
+                Write-Verbose "User canceled the process."
+                Exit
+            }
+            $Result = Invoke-GUIMessageBox "Register $File?" -Title "Register" -Buttons 'YesNoCancel' -Icon 'Question' -DefaultButton 'Button3'
+            regsvr32.exe $File
+        }
     }
 }

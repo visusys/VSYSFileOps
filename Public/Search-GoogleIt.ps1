@@ -35,6 +35,8 @@ function Search-GoogleIt {
 
     process {
 
+        Add-Type -AssemblyName System.Web
+
         if($ImageSearchSize -eq 'Any'){
             $ImageSearchSize = ''
         }
@@ -48,9 +50,9 @@ function Search-GoogleIt {
             $ImageFileType = $ImageFileType.ToLower()
         }
 
-
         $DefaultBrowserPath = (Get-DefaultBrowser).ImagePath
         $GetBrowser = Get-Process | Where-Object Path -eq $DefaultBrowserPath
+
         if(!($GetBrowser)){
             Start-Process $DefaultBrowserPath
             do {
@@ -59,12 +61,17 @@ function Search-GoogleIt {
             } Until ( $BrowserProcess )
             
         }
+
         foreach ($Q in $Query) {
+            
             $Q = $Q -replace ' ','+'
+
+            $Encoded = [System.Web.HttpUtility]::UrlEncode($Q)   
+
             if($ImageSearch){
-                $SearchString =  "https://www.google.com/search?as_st=y&tbm=isch&as_q=$Q+$SiteOrDomain&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:$ImageSearchSize,ift:$ImageFileType"
+                $SearchString = "https://www.google.com/search?as_st=y&tbm=isch&as_q=$Encoded+$SiteOrDomain&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=isz:lt,islt:$ImageSearchSize,ift:$ImageFileType"
             }else{
-                $SearchString = "https://www.google.com/search?q=$Q+$SiteOrDomain"
+                $SearchString = "https://www.google.com/search?q=$Encoded+$SiteOrDomain"
             }
             Start-Sleep .1
             Start-Process $SearchString

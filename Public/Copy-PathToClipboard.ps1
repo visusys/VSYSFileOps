@@ -63,7 +63,7 @@ function Copy-PathToClipboard {
         [Switch]
         $NoQuotes
     )
-    Process {
+    process {
 
         Add-Type -AssemblyName System.Windows.Forms
         

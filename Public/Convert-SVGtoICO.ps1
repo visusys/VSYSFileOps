@@ -51,12 +51,18 @@ function Convert-SVGtoICO {
     $TempDir = New-TempDirectory 
     $TempDirName = $TempDir.FullName
     
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 16 -h 16 -a -f png `"$InputFile`" -o `"$TempDirName\16.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 24 -h 24 -a -f png `"$InputFile`" -o `"$TempDirName\24.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 32 -h 32 -a -f png `"$InputFile`" -o `"$TempDirName\32.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 48 -h 48 -a -f png `"$InputFile`" -o `"$TempDirName\48.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 64 -h 64 -a -f png `"$InputFile`" -o `"$TempDirName\64.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 256 -h 256 -a -f png `"$InputFile`" -o `"$TempDirName\256.png`"" -Wait
+    $InputFileUnescaped = $InputFile.Replace('`[','[')
+    $InputFileUnescaped = $InputFileUnescaped.Replace('`]',']')
+
+    Write-Host "`$TempDir:" $TempDir -ForegroundColor Green
+    Write-Host "`$InputFile:" $InputFile -ForegroundColor Green
+    
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 16 -h 16 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\16.png`""
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 24 -h 24 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\24.png`""
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 32 -h 32 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\32.png`""
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 48 -h 48 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\48.png`""
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 64 -h 64 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\64.png`""
+    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 256 -h 256 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\256.png`"" -Wait
     
     Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 16x16 -gravity center -extent 16x16 `"$TempDirName\16.png`" `"$TempDirName\16.png`""
     Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 24x24 -gravity center -extent 24x24 `"$TempDirName\24.png`" `"$TempDirName\24.png`""
@@ -67,7 +73,6 @@ function Convert-SVGtoICO {
 
     Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert `"$TempDirName\16.png`" `"$TempDirName\24.png`" `"$TempDirName\32.png`" `"$TempDirName\48.png`" `"$TempDirName\64.png`" `"$TempDirName\256.png`" `"$TempDirName\icon.ico`"" -Wait
 
-    
     if(!$OutputFile){
         $NewFileName = (Get-Item $InputFile).BaseName + ".ico"
         $OutputFile = (Split-Path -Path $InputFile) + "\" + $NewFileName
@@ -87,6 +92,4 @@ function Convert-SVGtoICO {
 
     Remove-Item -Path $TempDirName -Force -Recurse
     
-    Reset-IconCache
-
 }
