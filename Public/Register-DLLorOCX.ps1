@@ -26,42 +26,28 @@
 function Register-DLLorOCX {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, Position=0)]
-        [ValidateScript({
-            if (!(Test-Path -LiteralPath $_)) {
-                throw [System.ArgumentException] "File or Folder does not exist."
-            }
-            if (Test-Path -LiteralPath $_ -PathType Container) {
-                throw [System.ArgumentException] "Folder passed when a file was expected."
-            }
-            if($_ -notmatch '(\.dll|\.ocx)'){
-                throw "You must pass a .dll or .ocx file."
-            }
-            $true
-        })]
+        [Parameter(Mandatory,Position=0)]
         [string]
         $File,
 
-        [Alias("u")]
         [Parameter(Mandatory = $false, Position = 1)]
         [switch]
         $Unregister
     )
 
-    process {
-        if($Unregister){
-            $Result = Invoke-GUIMessageBox "Unregister $File?" -Title "Unregister" -Buttons 'YesNoCancel' -Icon 'Question' -DefaultButton 'Button3'
-            if($Result -ne 'Yes') { 
-                Write-Verbose "User canceled the process."
-                Exit
-            }
-            regsvr32.exe -u $File
+    if($Unregister){
+        $Result = Invoke-VBMessageBox "Are you sure you want to unregister this library? ($File)" -Title "Confirmation" -Icon Question -BoxType YesNoCancel -DefaultButton 3
+        if($Result -ne 'Yes') { 
+            Write-Host "User canceled the process."
+            exit
+        }
+        regsvr32.exe -u $File
+    }else{
+        $Result = Invoke-VBMessageBox "Are you sure you want to register this library? ($File)" -Title "Confirmation" -Icon Question -BoxType YesNoCancel -DefaultButton 3
+        if($Result -ne 'Yes'){
+            Write-Host "User canceled the process."
+            exit
         }else{
-            if($Result -ne 'Yes') { 
-                Write-Verbose "User canceled the process."
-                Exit
-            }
-            $Result = Invoke-GUIMessageBox "Register $File?" -Title "Register" -Buttons 'YesNoCancel' -Icon 'Question' -DefaultButton 'Button3'
             regsvr32.exe $File
         }
     }

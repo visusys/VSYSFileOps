@@ -50,11 +50,6 @@ Function Convert-ImageToPNG {
         $SourceFiles
     )
 
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
-    Add-Type -AssemblyName PresentationCore,PresentationFramework
-    [System.Windows.Forms.Application]::EnableVisualStyles()
-
     $SourceFiles | ForEach-Object -Parallel {
         $MagickArgs = [System.Collections.ArrayList]@()
         $File       = $_
@@ -67,11 +62,8 @@ Function Convert-ImageToPNG {
         magick @MagickArgs
     } -ThrottleLimit 20
 
-    $MBMessage			= "Conversion to PNG Complete."
-    $MBTitle			= "Conversion Complete"
-    $MBButtons		    = [System.Windows.Forms.MessageBoxButtons]::OK
-    $MBIcon				= [System.Windows.Forms.MessageBoxIcon]::Information
-    $MBDefaultButton	= [System.Windows.Forms.MessageBoxDefaultButton]::Button1
-    [System.Windows.Forms.MessageBox]::Show($MBMessage, $MBTitle, $MBButtons, $MBIcon, $MBDefaultButton)
+
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    [Microsoft.VisualBasic.Interaction]::MsgBox('Conversion to PNG Complete.','OKOnly,SystemModal,Information', 'Conversion Complete')
 
 }

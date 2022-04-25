@@ -28,43 +28,57 @@
 function Get-SVGsFromFile {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateScript({
-                if (-Not ($_ | Test-Path) ) {
-                    throw "File or folder does not exist" 
-                }
-                return $true
+            if (!(Test-Path -LiteralPath $_)) {
+                throw [System.ArgumentException] "File or Folder does not exist."
+            }
+            if (Test-Path -LiteralPath $_ -PathType Container) {
+                throw [System.ArgumentException] "Folder passed when a file was expected."
+            }
+            return $true
         })]
-        [string]
+        [String]
         $Source,
 
-        [Parameter(Mandatory = $false)]
+        [Parameter(Mandatory, Position = 1, ValueFromPipelineByPropertyName)]
         [ValidateScript({
-                Confirm-ValidWindowsPath -Path $_ -Container
+            if (Test-Path -LiteralPath $_ -PathType Leaf) {
+                throw [System.ArgumentException] "File passed when a folder was expected."
+            }
+            return $true
         })]
         [string]
         $Destination
     )
 
-    if($Destination){
-        $Destination = $Destination.TrimEnd('\')
-        if(!(Test-Path -Path $Destination)){
-            New-Item -Path $Destination -ItemType "directory"
-        }
-    }
+    process {
 
-    $regex = '<svg\b[^>]*?>[\s\S]*?<\/svg>'
-    $outpt = select-string -Path $Source -Pattern $regex -AllMatches
-    foreach ($match in $outpt.Matches) {
-        $file = ((Get-RandomAlphanumericString -Length 14) + '.svg')
-        if($Destination){
-            $file = $Destination + '\' + $file
-        }else{
-            $srcd = ([System.IO.FileInfo]$Source).DirectoryName
-            $file = $srcd + '\' + $file
+        $Destination = $Destination.TrimEnd('\')
+
+        Write-Host "INIT: Process Block."
+        Write-Host "Destination: $Destination"
+
+        if(!(Test-Path -LiteralPath $Destination)){
+            New-Item -Path $Destination -ItemType "Directory" -Force
         }
-        Add-Content $file $match.Value -Encoding UTF8
+
+        $regex = '<svg\b[^>]*?>[\s\S]*?<\/svg>'
+        $SVGFiles = select-string -Path $Source -Pattern $regex -AllMatches
+
+        $BaseName = ([IO.Path]::GetFileNameWithoutExtension($Source))
+
+        foreach ($SVGFile in $SVGFiles.Matches) {
+
+            $RND = Get-RandomAlphanumericString -Length 4
+            $EXT = '.svg'
+            $FileName  = $BaseName + "_" + $RND + $EXT
+
+            $NewFile = [IO.Path]::Combine($Destination, $FileName)
+            Write-Host "`$NewFile:" $NewFile -ForegroundColor Green
+            Add-Content $NewFile $SVGFile.Value -Encoding UTF8
+        }
+
+        Invoke-GUIMessageBox -Message "Conversion complete." -Title "Conversion Complete" -Buttons OK -Icon Information
     }
 }
-
-# Get-SVGsFromFile -Source "D:\Dev\Powershell\Modules\VSYSFileOps\Ignore\SVGPackage.txt" -Destination "C:\Users\futur\Desktop\ico"

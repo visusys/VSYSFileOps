@@ -55,7 +55,7 @@ function Merge-FlattenDirectory {
                 if (!(Test-Path -LiteralPath $_)) {
                     throw [System.ArgumentException] "Path does not exist." 
                 }
-                if ((Test-IsSensitiveWindowsPath -Path $_ -Strict).IsSensitive) {
+                if (Test-IsWindowsPathUnsafe -Path $_ -Strict) {
                     throw [System.ArgumentException] "Path supplied is a protected OS directory."
                 }
                 return $true
@@ -126,7 +126,7 @@ function Merge-FlattenDirectory {
             }
 
             # Make sure the passed Destination is not in a protected or sensitive OS location.
-            if((Test-IsSensitiveWindowsPath -Path $DestinationPath -Strict).IsSensitive){
+            if(Test-IsWindowsPathUnsafe -Path $DestinationPath -Strict){
                 throw [System.IO.IOException] "The destination path is, or resides in a protected operating system directory."
             }
 

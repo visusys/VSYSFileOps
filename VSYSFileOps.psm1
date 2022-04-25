@@ -14,7 +14,6 @@ if ($AssemblyFolders.BaseName -contains 'Standard') {
         $Assembly = @( Get-ChildItem -Path $PSScriptRoot\Lib\Default\*.dll -ErrorAction SilentlyContinue )
     }
 }
-
 $FoundErrors = @(
     Foreach ($Import in @($Assembly)) {
         try {

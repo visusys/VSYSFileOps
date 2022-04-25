@@ -32,64 +32,59 @@
 function Convert-SVGtoICO {
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory,Position = 0)]
-        [ValidateScript({
-            (Test-Path -Path $_ -PathType leaf) -and ((Get-Item $_).Extension -eq '.svg')
-        },ErrorMessage = "The passed path, {0}, does not include a file, doesn't exist, or the file is not a SVG.")]
-        [string]$InputFile,
-
-        [Parameter(Mandatory = $false)]
-        [ValidateScript({
-            if($_ -notmatch "(\.ico)"){
-                throw "The output file must be .ico"
-            }
-            return $true
-        })]
-        [System.IO.FileInfo]$OutputFile
+        [Parameter(Mandatory, Position = 0, ValueFromPipeline)]
+        [string[]]$InputSVGs
     )
 
-    $TempDir = New-TempDirectory 
-    $TempDirName = $TempDir.FullName
-    
-    $InputFileUnescaped = $InputFile.Replace('`[','[')
-    $InputFileUnescaped = $InputFileUnescaped.Replace('`]',']')
+    process {
 
-    Write-Host "`$TempDir:" $TempDir -ForegroundColor Green
-    Write-Host "`$InputFile:" $InputFile -ForegroundColor Green
-    
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 16 -h 16 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\16.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 24 -h 24 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\24.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 32 -h 32 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\32.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 48 -h 48 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\48.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 64 -h 64 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\64.png`""
-    Start-Process -WindowStyle hidden -FilePath rsvg-convert -ArgumentList "-w 256 -h 256 -a -f png `"$InputFileUnescaped`" -o `"$TempDirName\256.png`"" -Wait
-    
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 16x16 -gravity center -extent 16x16 `"$TempDirName\16.png`" `"$TempDirName\16.png`""
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 24x24 -gravity center -extent 24x24 `"$TempDirName\24.png`" `"$TempDirName\24.png`""
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 32x32 -gravity center -extent 32x32 `"$TempDirName\32.png`" `"$TempDirName\32.png`""
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 48x48 -gravity center -extent 48x48 `"$TempDirName\48.png`" `"$TempDirName\48.png`""
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 64x64 -gravity center -extent 64x64 `"$TempDirName\64.png`" `"$TempDirName\64.png`""
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert -background none -resize 256x256 -gravity center -extent 256x256 `"$TempDirName\256.png`" `"$TempDirName\256.png`"" -Wait
+        $InputSVGs | ForEach-Object -Parallel {
 
-    Start-Process -WindowStyle hidden -FilePath "magick" -ArgumentList "convert `"$TempDirName\16.png`" `"$TempDirName\24.png`" `"$TempDirName\32.png`" `"$TempDirName\48.png`" `"$TempDirName\64.png`" `"$TempDirName\256.png`" `"$TempDirName\icon.ico`"" -Wait
+            $TempDir = New-TempDirectory
+            $TempDirName = $TempDir.FullName
+            
+            $InputUnescaped = $_.Replace('`[', '[')
+            $InputUnescaped = $InputUnescaped.Replace('`]', ']')
+            
+            rsvg-convert -w 16 -h 16 -a -f png `"$InputUnescaped`" -o `"$TempDirName\16.png`" 
+            rsvg-convert -w 24 -h 24 -a -f png `"$InputUnescaped`" -o `"$TempDirName\24.png`"
+            rsvg-convert -w 32 -h 32 -a -f png `"$InputUnescaped`" -o `"$TempDirName\32.png`"
+            rsvg-convert -w 48 -h 48 -a -f png `"$InputUnescaped`" -o `"$TempDirName\48.png`"
+            rsvg-convert -w 64 -h 64 -a -f png `"$InputUnescaped`" -o `"$TempDirName\64.png`"
+            rsvg-convert -w 256 -h 256 -a -f png `"$InputUnescaped`" -o `"$TempDirName\256.png`"
 
-    if(!$OutputFile){
-        $NewFileName = (Get-Item $InputFile).BaseName + ".ico"
-        $OutputFile = (Split-Path -Path $InputFile) + "\" + $NewFileName
+            Write-Host "16.png Length: "(Get-Item -LiteralPath "$TempDirName\16.png").length
+
+            If ((Get-Item -LiteralPath "$TempDirName\16.png").length -eq 0kb) {
+                Remove-Item -LiteralPath $TempDirName -Force -Recurse
+                Invoke-VBMessageBox "Error occured during SVG conversion ($_)." -Title "SVG Conversion Error" -Icon Critical -BoxType OKOnly -DefaultButton 1
+                Break
+            }
+
+            magick convert -background none -resize 16x16 -gravity center -extent 16x16 `"$TempDirName\16.png`" `"$TempDirName\16.png`"
+            magick convert -background none -resize 24x24 -gravity center -extent 24x24 `"$TempDirName\24.png`" `"$TempDirName\24.png`"
+            magick convert -background none -resize 32x32 -gravity center -extent 32x32 `"$TempDirName\32.png`" `"$TempDirName\32.png`"
+            magick convert -background none -resize 48x48 -gravity center -extent 48x48 `"$TempDirName\48.png`" `"$TempDirName\48.png`"
+            magick convert -background none -resize 64x64 -gravity center -extent 64x64 `"$TempDirName\64.png`" `"$TempDirName\64.png`"
+            magick convert -background none -resize 256x256 -gravity center -extent 256x256 `"$TempDirName\256.png`" `"$TempDirName\256.png`"
+        
+            $IconTempName = Get-RandomAlphanumericString -Length 15
+
+            magick convert `"$TempDirName\16.png`" `"$TempDirName\24.png`" `"$TempDirName\32.png`" `"$TempDirName\48.png`" `"$TempDirName\64.png`" `"$TempDirName\256.png`" `"$TempDirName\$IconTempName.ico`"
+            
+            $DestFile = [System.IO.Path]::GetFileNameWithoutExtension($_) + ".ico"
+            $DestPath = [System.IO.Path]::GetDirectoryName($_)
+
+            if (Test-Path -LiteralPath "$TempDirName\$IconTempName.ico" -PathType leaf) {
+                Copy-Item $TempDirName\$IconTempName.ico -Destination $DestPath
+                Rename-Item -LiteralPath "$DestPath\$IconTempName.ico" -NewName $DestFile
+            }
+        
+            Remove-Item -LiteralPath $TempDirName -Force -Recurse
+            
+        } -ThrottleLimit 32
+
+        Invoke-VBMessageBox -Message "Conversion to ICO complete." -Title "Conversion Complete" -Icon Information -BoxType OKOnly -DefaultButton 1
+
     }
-
-    $DestPath = Split-Path -Path $OutputFile
-    $DestFile = Split-Path -Path $OutputFile -Leaf
-
-    if(!(Test-Path -Path $DestPath)){
-        New-Item -Path $DestPath -ItemType "directory"
-    }
-
-    if(Test-Path -Path "$TempDirName\icon.ico" -PathType leaf){
-        Copy-Item $TempDirName\icon.ico -Destination $DestPath
-        Rename-Item -Path "$DestPath\icon.ico" -NewName $DestFile
-    }
-
-    Remove-Item -Path $TempDirName -Force -Recurse
-    
 }
